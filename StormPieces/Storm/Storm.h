@@ -30,6 +30,17 @@ public:
     float CurrentViewAngle1;
     float CurrentViewAngle2;
     float CurrentViewLimitSpan;
+    float yE1;
+    float yE2; 
+    float yW1; 
+    float yW2; 
+    float xN1; 
+    float xN2; 
+    float xS1; 
+    float xS2;
+        int StartingAngle;
+        bool AllFour;
+    //float limits[4][2];
 
     struct point
     {
@@ -52,16 +63,14 @@ public:
         bool three;
         bool four;
     };
-
+/*
     struct viewLimits
     {
-        float Location1;
-        char Direction1;
-        float Location2;
-        char Direction2;
+        float yE1, yE2, yW1, yW2, xN1, xN2, xS1, xS2;
+        int StartingAngle;
         bool AllFour;
     };
-
+*/
     Storm();
     void SetParams(float _diameter, float _speed, float _distanceX, float _distanceY);
     void Start(long _startTime);
@@ -75,7 +84,7 @@ public:
     int GetRing(float x, float y);
     void Update(long _currentTime);
     struct points GetIntersections();
-    struct viewLimits GetViewLimits();
+    void CalcViewLimits();
     float GetViewLimitSpan();
     float RadToDegrees(float rad);
     float DegreesToRad(float degrees);
