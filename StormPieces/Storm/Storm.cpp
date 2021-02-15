@@ -88,7 +88,6 @@ float Storm::GetAngleRad(float x, float y)
     return atan(abs(y) / abs(x));
 }
 
-
 Storm::quadrants Storm::WhichQuadrants(float x, float y)
 {
     quadrants q;
@@ -204,12 +203,47 @@ float Storm::GetViewLimitSpan()
     return CurrentViewLimitSpan;
 }
 
-Storm::viewLimits Storm::GetViewLimits()
+void Storm::CalcViewLimits()
 {
-    viewLimits v;
-    int StartingAngle;
+    //viewLimits v;
+    //int StartingAngle;
 
     Storm::points p = Storm::GetIntersections();
+
+    if (p.x1 == 9 && p.x2 == 9 && p.y1 == 9 && p.y2 == 9)
+    {
+        //all 9's indicates that the storm is overhead and encompassing the island
+        //the storm is visible on all walls
+        /*
+        //North
+        limits[0][0] = 0;
+        limits[0][1] = 100;
+        //East
+        limits[1][0] = 0;
+        limits[1][1] = 100;
+        //South
+        limits[2][0] = 0;
+        limits[2][1] = 100;
+        //West
+        limits[3][0] = 0;
+        limits[3][1] = 100;
+*/
+        //North
+        xN1 = 0;
+        xN2 = 100;
+        //East
+        yE1 = 0;
+        yE2 = 100;
+        //South
+        xS1 = 0;
+        xS2 = 100;
+        //West
+        yW1 = 0;
+        yW2 = 100;
+        AllFour = true;
+        return;
+    }
+
     CurrentViewAngle1 = GetAngle(p.x1, p.y1);
     CurrentViewAngle2 = GetAngle(p.x2, p.y2);
 
@@ -229,40 +263,101 @@ Storm::viewLimits Storm::GetViewLimits()
     {
         /* code */
     }
-    
-    switch (Storm::GetQuadrant(p.x1,p.y1))
+
+    if (CurrentViewAngle1 <= 45 || CurrentViewAngle1 >= 315)
     {
-    case 1:
-        //check N
-        
-        //Check E
-        /* code */
-        break;
-     case 2:
-        //check N and W
-        /* code */
-        break;
-            case 3:
-        //check S and W
-        break;
-            case 4:
-        //check S and E
-        break;   
-    default:
-        break;
+        //it intersects the East
+        if (CurrentViewAngle1 <= 45)
+            yE1 = 5 * tan(DegreesToRad(CurrentViewAngle1));
+        else
+            yE1 = -5 * tan(DegreesToRad(360 - CurrentViewAngle1));
     }
-    return v;
+    if (CurrentViewAngle1 >= 45 && CurrentViewAngle1 <= 135)
+    {
+        //it intersects the North
+        if (CurrentViewAngle1 < 90)
+            xN1 = 5 * tan(DegreesToRad(90 - CurrentViewAngle1));
+        else
+            xN1 = -5 * tan(DegreesToRad(CurrentViewAngle1 - 90));
+    }
+    if (CurrentViewAngle1 >= 135 && CurrentViewAngle1 <= 225)
+    {
+        //it intersects the West
+        if (CurrentViewAngle1 >= 135)
+            yW1 = 5 * tan(DegreesToRad(CurrentViewAngle1));
+        else
+            yW1 = -5 * tan(DegreesToRad(360 - CurrentViewAngle1));
+    }
+    if (CurrentViewAngle1 >= 225 && CurrentViewAngle1 <= 315)
+    {
+        //it intersects the south
+        if (CurrentViewAngle1 < 270)
+            xS1 = -5 * tan(DegreesToRad(270 - CurrentViewAngle1));
+        else
+            xS1 = 5 * tan(DegreesToRad(CurrentViewAngle1 - 270));
+    }
+
+    if (CurrentViewAngle2 <= 45 || CurrentViewAngle2 >= 315)
+    {
+        //it intersects the East
+        if (CurrentViewAngle2 <= 45)
+            yE2 = 5 * tan(DegreesToRad(CurrentViewAngle2));
+        else
+            yE2 = -5 * tan(DegreesToRad(360 - CurrentViewAngle2));
+    }
+    if (CurrentViewAngle2 >= 45 && CurrentViewAngle2 <= 135)
+    {
+        //it intersects the North
+        if (CurrentViewAngle2 < 90)
+            xN2 = 5 * tan(DegreesToRad(90 - CurrentViewAngle2));
+        else
+            xN2 = -5 * tan(DegreesToRad(CurrentViewAngle2 - 90));
+    }
+    if (CurrentViewAngle2 >= 135 && CurrentViewAngle2 <= 225)
+    {
+        //it intersects the West
+        if (CurrentViewAngle2 >= 135)
+            yW2 = 5 * tan(DegreesToRad(CurrentViewAngle2));
+        else
+            yW2 = -5 * tan(DegreesToRad(360 - CurrentViewAngle2));
+    }
+    if (CurrentViewAngle2 >= 225 && CurrentViewAngle2 <= 315)
+    {
+        //it intersects the south
+        if (CurrentViewAngle2 < 270)
+            xS2 = -5 * tan(DegreesToRad(270 - CurrentViewAngle2));
+        else
+            xS2 = 5 * tan(DegreesToRad(CurrentViewAngle2 - 270));
+    }
+
+/*
+    //North
+    limits[0][0] = xN1;
+    limits[0][1] = xN2;
+    //East
+    limits[1][0] = yE1;
+    limits[1][1] = yE2;
+    //South
+    limits[2][0] = xS1;
+    limits[2][1] = xS2;
+    //West
+    limits[3][0] = yW1;
+    limits[3][1] = yW2;
+    AllFour = false;
+*/
+    AllFour = false;
+    return;
 }
 
-    float Storm::RadToDegrees(float rad)
-    {
-        return rad * 180/PI;
-    }
+float Storm::RadToDegrees(float rad)
+{
+    return rad * 180 / PI;
+}
 
-    float Storm::DegreesToRad(float degrees)
-    {
-        return degrees * PI/180;
-    }
+float Storm::DegreesToRad(float degrees)
+{
+    return degrees * PI / 180;
+}
 
 void Storm::Update(long currentTime)
 {
@@ -276,7 +371,7 @@ void Storm::Update(long currentTime)
 
     float distance = Storm::GetDistance(CurrentX, CurrentY);
 
-   // viewLimits v = Storm::GetViewLimits();
+    // viewLimits v = Storm::GetViewLimits();
 
     NearestEdge = distance - Diameter / 2.0;
     if (NearestEdge < 0)

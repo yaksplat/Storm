@@ -1,4 +1,5 @@
 #include <Adafruit_NeoPixel.h>
+#include <Arduino.h>
 #include "NeoFade.h"
 #include "LinearFader.h"
 
@@ -307,7 +308,7 @@ void DoSunrise(Adafruit_NeoPixel &_strip)
       //start updating the color of the East strip (middle out)
       fadeStrip(_strip, FadeFromColor, FadeToColor, _start, _end, true, false);
 
-      if (FadeToColor == WarmWhite and sunSteps1 == (_strip.numPixels() / 2) - 1)
+      if (FadeToColor == WarmWhite && sunSteps1 == (_strip.numPixels() / 2) - 1)
         SunriseDone = true;
       /*  if (_start < 20)
         {
@@ -383,7 +384,7 @@ void DoSunset(Adafruit_NeoPixel &_strip)
       //flip start and end
       fadeStrip(_strip, FadeFromColor, FadeToColor, _start, _end, true, false);
 
-      if (FadeToColor == PreDawnViolet and sunSteps1 == 1)
+      if (FadeToColor == PreDawnViolet && sunSteps1 == 1)
         SunsetDone = true;
       sunSteps1--;
     }
