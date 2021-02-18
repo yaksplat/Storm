@@ -28,6 +28,7 @@ public:
     int CurrentQuadrant;
     float CurrentAngle;
     int CurrentRing;
+    float CurrentDistance;
     float CurrentViewAngle1;
     float CurrentViewAngle2;
     float CurrentViewLimitSpan;
@@ -59,6 +60,12 @@ public:
         bool three;
         bool four;
     };
+    struct projection
+    {
+        float intersectionPoint;
+        char direction;
+        float mapping;
+    };
 /*
     struct viewLimits
     {
@@ -78,12 +85,14 @@ public:
     float GetAngleRad(float x, float y);
     struct quadrants WhichQuadrants(float x, float y);
     int GetRing(float x, float y);
-    void Update(long _currentTime);
+    void Update(long _currentTime, bool debug);
     struct points GetIntersections();
     void CalcViewLimits();
+    void CalcViewAngles();
     float GetViewLimitSpan();
     float RadToDegrees(float rad);
     float DegreesToRad(float degrees);
     void CalculateStartsAndEnds();
+    struct projection CalcMappingForAngle(float angle);
 };
 #endif

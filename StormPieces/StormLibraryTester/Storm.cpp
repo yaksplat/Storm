@@ -203,41 +203,26 @@ float Storm::GetViewLimitSpan()
     return CurrentViewLimitSpan;
 }
 
-void Storm::CalcViewLimits()
+void Storm::CalcViewAngles()
 {
-    //viewLimits v;
-    //int StartingAngle;
-xN1 = 0;
-        xN2 = 0;
-        //East
-        yE1 = 0;
-        yE2 = 0;
-        //South
-        xS1 = 0;
-        xS2 = 0;
-        //West
-        yW1 = 0;
-        yW2 = 0;
+    //North
+    xN1 = 0;
+    xN2 = 0;
+    //East
+    yE1 = 0;
+    yE2 = 0;
+    //South
+    xS1 = 0;
+    xS2 = 0;
+    //West
+    yW1 = 0;
+    yW2 = 0;
     Storm::points p = Storm::GetIntersections();
 
     if (p.x1 == 9 && p.x2 == 9 && p.y1 == 9 && p.y2 == 9)
     {
         //all 9's indicates that the storm is overhead and encompassing the island
         //the storm is visible on all walls
-        /*
-        //North
-        limits[0][0] = 0;
-        limits[0][1] = 100;
-        //East
-        limits[1][0] = 0;
-        limits[1][1] = 100;
-        //South
-        limits[2][0] = 0;
-        limits[2][1] = 100;
-        //West
-        limits[3][0] = 0;
-        limits[3][1] = 100;
-*/
         //North
         xN1 = 0;
         xN2 = 100;
@@ -253,9 +238,14 @@ xN1 = 0;
         AllFour = true;
         return;
     }
-
+    AllFour = false;
     CurrentViewAngle1 = GetAngle(p.x1, p.y1);
     CurrentViewAngle2 = GetAngle(p.x2, p.y2);
+}
+void Storm::CalcViewLimits()
+{
+    if(AllFour)
+    return;
 
     float span = GetViewLimitSpan();
     if (CurrentViewAngle1 - CurrentViewAngle2 < 180)
@@ -363,10 +353,9 @@ void Storm::CalculateStartsAndEnds()
 
         if (yE1 != 0)
         {
-            Serial.println(yE1);
             //the lightning starts on E, but how far does it go?
             Estart = map(yE1*100, -500, 500, 0, 100);
-            Serial.println(Estart);
+
             if (yE2 != 0)
             {
                 Eend = map(yE2*100, -500, 500, 0, 100);
@@ -470,6 +459,50 @@ void Storm::CalculateStartsAndEnds()
     }
 }
 
+Storm::projection Storm::CalcMappingForAngle(float angle)
+{
+    projection p;
+
+ if (angle <= 45 || angle >= 315)
+    {
+        p.direction = 'E';
+        //it intersects the East
+        if (angle <= 45)
+            p.intersectionPoint = 5 * tan(DegreesToRad(angle));
+        else
+            p.intersectionPoint = -5 * tan(DegreesToRad(360 - angle));
+    }
+    if (angle >= 45 && angle <= 135)
+    {
+         p.direction = 'N';
+        //it intersects the North
+        if (angle < 90)
+            p.intersectionPoint = 5 * tan(DegreesToRad(90 - angle));
+        else
+            p.intersectionPoint = -5 * tan(DegreesToRad(angle - 90));
+    }
+    if (angle >= 135 && angle <= 225)
+    {
+         p.direction = 'W';
+        //it intersects the West
+        if (angle >= 135 && angle <= 180)
+            p.intersectionPoint = 5 * tan(DegreesToRad(180-angle));
+        else
+            p.intersectionPoint = -5 * tan(DegreesToRad(angle-180));
+    }
+    if (angle >= 225 && angle <= 315)
+    {
+         p.direction = 'S';
+        //it intersects the south
+        if (angle < 270)
+            p.intersectionPoint = -5 * tan(DegreesToRad(270 - angle));
+        else
+            p.intersectionPoint = 5 * tan(DegreesToRad(angle - 270));
+    }   
+    p.mapping = map(p.intersectionPoint*100, -500, 500, 0, 100);
+    return p;
+}
+
 float Storm::RadToDegrees(float rad)
 {
     return rad * 180 / PI;
@@ -480,7 +513,7 @@ float Storm::DegreesToRad(float degrees)
     return degrees * PI / 180;
 }
 
-void Storm::Update(long currentTime)
+void Storm::Update(long currentTime, bool debug)
 {
     CurrentTime = currentTime;
     ElapsedTime = CurrentTime - StartTime;
@@ -497,13 +530,24 @@ void Storm::Update(long currentTime)
     CurrentAngle = GetAngle(CurrentX, CurrentY);
     CurrentRing = GetRing(CurrentX, CurrentY);
 
-    float distance = Storm::GetDistance(CurrentX, CurrentY);
+    CurrentDistance = Storm::GetDistance(CurrentX, CurrentY);
+    Storm::CalcViewAngles();  //<==== This will calculate AllFour
 
-    Storm::CalcViewLimits();
-    Storm::CalculateStartsAndEnds();
-    NearestEdge = distance - Diameter / 2.0;
+    //*****Only Needed for Testing*****//
+    if (debug)
+    {
+        Storm::CalcViewLimits();
+        Storm::CalculateStartsAndEnds();
+    }
+    //*****Only Needed for Testing*****//
+    //*****just call CalcMappingForAngle instead to get the exact mapping
+
+    NearestEdge = CurrentDistance - Diameter / 2.0;
     if (NearestEdge < 0)
         NearestEdge *= -1;
     if (NearestEdge > 5 && (CurrentQuadrant == 1 || CurrentQuadrant == 4))
-        done = true;
+        {
+            AllFour = false;
+            done = true;
+        }
 }
