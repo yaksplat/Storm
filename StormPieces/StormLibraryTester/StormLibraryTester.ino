@@ -1,6 +1,14 @@
+#include <Adafruit_NeoPixel.h>
+#include <SPI.h>
+#include <SD.h>
+#include <Adafruit_VS1053.h>
+
+
 #include "Storm.h"
 #include "colors.h"
+#include "config.h"
 
+/*
 #define LED_COUNT_S 192
 #define LED_COUNT_E 147
 #define LED_COUNT_N 147
@@ -12,11 +20,14 @@
 #define LED_PIN_W     10
 
 #define BRIGHTNESS 255
-
+*/
 Adafruit_NeoPixel strip_S(LED_COUNT_S, LED_PIN_S, NEO_GRBW + NEO_KHZ800);
 Adafruit_NeoPixel strip_E(LED_COUNT_E, LED_PIN_E, NEO_GRBW + NEO_KHZ800);
 Adafruit_NeoPixel strip_N(LED_COUNT_N, LED_PIN_N, NEO_GRBW + NEO_KHZ800);
 Adafruit_NeoPixel strip_W(LED_COUNT_W, LED_PIN_W, NEO_GRBW + NEO_KHZ800);
+
+Adafruit_VS1053_FilePlayer musicPlayer = 
+  Adafruit_VS1053_FilePlayer(VS1053_RESET, VS1053_CS, VS1053_DCS, VS1053_DREQ, CARDCS);
 
 Storm::projection proj;
 
@@ -53,12 +64,30 @@ int randomAngle;
 int temp;
 
 bool debug;
-bool Nflipped, Wflipped, Sflipped, Eflipped ;
+//bool Nflipped, Wflipped, Sflipped, Eflipped ;
 int RunCount;
 int totalRuns =0;
 void setup()
 {
-  Serial.begin(9600);
+  Serial.begin(115200);
+/*
+  if (! musicPlayer.begin()) { // initialise the music player
+     Serial.println(F("Couldn't find VS1053, do you have the right pins defined?"));
+     while (1);
+  }
+
+  Serial.println(F("VS1053 found"));
+ 
+  musicPlayer.sineTest(0x44, 500);    // Make a tone to indicate VS1053 is working
+  
+  if (!SD.begin(CARDCS)) {
+    Serial.println(F("SD failed, or not present"));
+   while (1);  // don't do anything more
+  }
+  Serial.println("SD OK!");
+  musicPlayer.setVolume(10,10);
+  musicPlayer.useInterrupt(VS1053_FILEPLAYER_PIN_INT); 
+  */
   // put your setup code here, to run once:
   randomSeed(analogRead(A0));
 
@@ -74,21 +103,33 @@ void setup()
   StartTime = millis();
   //s.done == true;
   debug = false;
-  Nflipped = true;
-  Wflipped = true;
-  Eflipped = false;
-  Sflipped = false;
+ // Nflipped = true;
+ // Wflipped = true;
+ // Eflipped = false;
+ // Sflipped = false;
 
   RunCount =1000;
 }
 
+bool musicPlaying = false;
 
 void loop()
 {
-  float Diameter = random(100, 800) / 100.0;
-  float Speed = 250.0;
-  float DistanceX = random(-700, -500) / 100.0;
-  float DistanceY = random(-500, 500) / 100.0;
+  /*
+  if (musicPlaying == false) {
+    Serial.println(F("i should play music"));
+    musicPlayer.startPlayingFile("/track003.mp3");
+    musicPlaying = true;
+  }
+   if (musicPlayer.stopped()) {
+    Serial.println(F("music has stopped"));
+    musicPlaying=false;
+   }
+   */
+  float Diameter = random(DiameterMin, DiameterMax) / 100.0;
+  float Speed = StormSpeed /10.0;;
+  float DistanceX = random(DistanceXMin, DistanceXMax) / 100.0;
+  float DistanceY = random(DistanceYMin, DistanceYMax) / 100.0;
 
   s.SetParams(Diameter, Speed, DistanceX, DistanceY);
   s.Start(millis());
@@ -363,55 +404,70 @@ void ShowDebug(int level)
   flash f;
 void MakeSomeLightning(Storm::projection p, int intensity)
 {
-   int flashCount = random (3, 15);        // Min. and max. number of flashes each loop
-  int flashDurationMin = 1;               // Min. duration of each seperate flash
-  int flashDurationMax = 45;              // Max. duration of each seperate flash
-  int nextFlashDelayMin = 1;              // Min, delay between each flash and the next
-  int nextFlashDelayMax = 125;            // Max, delay between each flash and the next
+  int flashCount = random (FlashCountMin, FlashCountMax);        // Min. and max. number of flashes each loop
+  int flashDurationMin = FlashDurationMin;               // Min. duration of each seperate flash
+  int flashDurationMax = FlashDurationMax;              // Max. duration of each seperate flash
+  int nextFlashDelayMin = NextFlashDelayMin;              // Min, delay between each flash and the next
+  int nextFlashDelayMax = NextFlashDelayMax;            // Max, delay between each flash and the next
   int flashSize;// = random (5, 100);
   int flashVariation;
   int bright; //divisor on the brightness
   int location = GetTheMapping(p.direction,p.mapping );
   //intensity will be 1-5 based on the storm ring
-  thunderDelay = s.CurrentDistance*5280/1000;
+
+  //sound travelling at 1100 fps from the nearest edge of the storm
+  //delay is in ms
+
+  if(s.CurrentDistance < (s.Diameter/2))
+  {
+    //storm is right above.... there should be very little delay in the thunder
+    thunderDelay = random(0,2000);
+  }
+  else
+  {
+    thunderDelay = (s.NearestEdge*5280/1100)*997;
+  }
+
+  Serial.print("thunderDelay: ");Serial.print(thunderDelay);Serial.println(" ms");
+
   switch (intensity)
   {
   case 0:
-    bright = 20;
-    flashSize = random (3, 8);
-    flashVariation =3;
-    lightningInterval=random (4500, 5500);
+    bright = Cat0Bright;
+    flashSize = random (Cat0FlashSizeMin, Cat0FlashSizeMax);
+    flashVariation =Cat0FlashVariation;
+    lightningInterval=random (Cat0LightningIntervalMin, Cat0LightningIntervalMax);
     break;
   case 1:
-    bright = 10;
-    flashSize = random (5, 18);
-    flashVariation = 5;
-    lightningInterval=random (4500, 5500);
+    bright = Cat1Bright;
+    flashSize = random (Cat1FlashSizeMin, Cat1FlashSizeMax);
+    flashVariation = Cat1FlashVariation;
+    lightningInterval=random (Cat1LightningIntervalMin, Cat1LightningIntervalMax);
     break;
   case 2:
-    bright = 4;
-    flashSize = random (12, 25);
-    flashVariation=12;
-    lightningInterval=random (4500, 5500);
+    bright = Cat2Bright;
+    flashSize = random (Cat2FlashSizeMin, Cat2FlashSizeMax);
+    flashVariation=Cat2FlashVariation;
+    lightningInterval=random (Cat2LightningIntervalMin, Cat2LightningIntervalMax);
     break;
   case 3:
-    bright = 3;
-    flashSize = random (20, 40);
-    flashVariation =20;
-    lightningInterval=random (3500, 4500);
+    bright = Cat3Bright;
+    flashSize = random (Cat3FlashSizeMin, Cat3FlashSizeMax);
+    flashVariation =Cat3FlashVariation;
+    lightningInterval=random (Cat3LightningIntervalMin, Cat3LightningIntervalMax);
     break;
   case 4:
-    bright = 2;
-    flashSize = random (35, 80);
-    flashVariation=35;
-    lightningInterval=random (2750, 3500);
+    bright = Cat4Bright;
+    flashSize = random (Cat4FlashSizeMin, Cat4FlashSizeMax);
+    flashVariation=Cat4FlashVariation;
+    lightningInterval=random (Cat4LightningIntervalMin, Cat4LightningIntervalMax);
     break;
   default:
     //it's a category 5!!!! the most intense
-    bright = 1;
-    flashSize = random (175, 200);
+    bright = Cat5Bright;
+    flashSize = random (Cat5FlashSizeMin, Cat5FlashSizeMax);
     flashVariation=60;
-    lightningInterval= random (1500, 3500);
+    lightningInterval= random (Cat5LightningIntervalMin, Cat5LightningIntervalMax);
     break;
   }
   ShowDebug(1);
@@ -432,10 +488,10 @@ void MakeSomeLightning(Storm::projection p, int intensity)
     f.Location = location;
     f.Size = flashSize;
 
-    if(location > random(50,80))
-        location -= random(1,8);
+    if(location > random(LightningMovementThresholdMin,LightningMovementThresholdMax))
+        location -= random(LightningMovementMin,LightningMovementMax);
     else
-        location += random(1,8);
+        location += random(LightningMovementMin,LightningMovementMax);
     /*
     //Use for testing to force a location
     //good for edge tests
@@ -445,13 +501,7 @@ void MakeSomeLightning(Storm::projection p, int intensity)
     */
 
     f = CalculateOverflows(f);
-    DoFlash(f,bright);
-
-    //for (int pixel = flashLocation; pixel < flashSize+flashLocation; pixel++) {
-    //  strip_S.setPixelColor(pixel, 255/bright,255/bright,255/bright,0);
-    //}
-    //strip_S.show();
-    
+    DoFlash(f,bright);    
     delay(random(flashDurationMin, flashDurationMax)); // Keep it tured on, random duration
 
     SetAllStrips(c.LateNight,true);
@@ -698,4 +748,29 @@ void SetAllStrips(const uint32_t color, bool show)
   byte blue = (color >> 8) & 0xff;
   byte green = color & 0xff;
   SetAllStrips(red, green, blue, white, show);
+}
+
+void printDirectory(File dir, int numTabs) {
+   while(true) {
+     
+     File entry =  dir.openNextFile();
+     if (! entry) {
+       // no more files
+       //Serial.println("**nomorefiles**");
+       break;
+     }
+     for (uint8_t i=0; i<numTabs; i++) {
+       Serial.print('\t');
+     }
+     Serial.print(entry.name());
+     if (entry.isDirectory()) {
+       Serial.println("/");
+       printDirectory(entry, numTabs+1);
+     } else {
+       // files have sizes, directories do not
+       Serial.print("\t\t");
+       Serial.println(entry.size(), DEC);
+     }
+     entry.close();
+   }
 }

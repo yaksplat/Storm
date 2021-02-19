@@ -1,19 +1,14 @@
 #ifndef STORM_H
 #define STORM_H
 
-
 #include <math.h>
 #include <Arduino.h>
-
-//const float PI = 3.1415926;
 
 class Storm
 {
 private:
-
     unsigned long StartTime;
     unsigned long CurrentTime;
-    
 
 public:
     float Diameter;
@@ -21,7 +16,7 @@ public:
     float DistanceX;
     float DistanceY;
     float CurrentX;
-    float CurrentY; 
+    float CurrentY;
     bool done;
     float NearestEdge;
     long ElapsedTime;
@@ -32,12 +27,11 @@ public:
     float CurrentViewAngle1;
     float CurrentViewAngle2;
     float CurrentViewLimitSpan;
-    float yE1,yE2,yW1,yW2,xN1,xN2,xS1,xS2;
+    float yE1, yE2, yW1, yW2, xN1, xN2, xS1, xS2;
     int Nstart, Nend, Wstart, Wend, Sstart, Send, Estart, Eend;
 
-        int StartingAngle;
-        bool AllFour;
-    //float limits[4][2];
+    int StartingAngle;
+    bool AllFour;
 
     struct point
     {
@@ -66,20 +60,12 @@ public:
         char direction;
         float mapping;
     };
-/*
-    struct viewLimits
-    {
-        float yE1, yE2, yW1, yW2, xN1, xN2, xS1, xS2;
-        int StartingAngle;
-        bool AllFour;
-    };
-*/
+
     Storm();
     void SetParams(float _diameter, float _speed, float _distanceX, float _distanceY);
     void Start(long _startTime);
     struct point GetCurrentLocation(long _currentTime);
     int GetQuadrant(float x, float y);
-   // float GetDistance(struct point pt);
     float GetDistance(float x, float y);
     float GetAngle(float x, float y);
     float GetAngleRad(float x, float y);

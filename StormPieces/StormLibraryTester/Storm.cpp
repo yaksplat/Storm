@@ -1,7 +1,5 @@
 #include "Storm.h"
 
-//const float PI = 3.1415926;
-
 Storm::Storm()
 {
 }
@@ -58,6 +56,7 @@ float Storm::GetDistance(float x, float y)
 {
     return sqrt(pow(x, 2) + pow(y, 2));
 }
+
 float Storm::GetAngle(float x, float y)
 {
     float angle = RadToDegrees(atan(abs(y) / abs(x)));
@@ -242,6 +241,7 @@ void Storm::CalcViewAngles()
     CurrentViewAngle1 = GetAngle(p.x1, p.y1);
     CurrentViewAngle2 = GetAngle(p.x2, p.y2);
 }
+
 void Storm::CalcViewLimits()
 {
     if(AllFour)
