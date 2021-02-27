@@ -1,0 +1,7 @@
+{
+    "programmer": "USBtinyISP",
+    "board": "adafruit:samd:adafruit_feather_m0_express",
+    "configuration": "opt=small,usbstack=arduino,debug=off",
+    "port": "COM10",
+    "sketch": "StormLibraryTester.ino"
+}
